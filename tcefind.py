@@ -1,8 +1,6 @@
 from flask import Flask, render_template, request
 import requests
 from bs4 import BeautifulSoup
-import time
-import _thread
 
 app = Flask(__name__)
 
@@ -53,28 +51,5 @@ def package_info():
             depret += "<a href=\"/info?package=" + x + "\">" + x + "</a><br>"
     return render_template("info.html", info=info, md5sum=md5sum.content.decode("utf-8"), dep=depret, packagename=packagename)
 
-def cacheIndex(do_once):
-    if do_once:
-        index = requests.get("http://distro.ibiblio.org/tinycorelinux/11.x/x86/tcz/")
-        if(index.status_code != 200):
-            print("ibiblio error!")
-            return # Basically, use last known cache
-        soup = BeautifulSoup(index.content, 'html.parser')
-        links = soup.find_all('a')
-        links = links[4:] # Remove directory links
-        out = ""
-        for x in links:
-            if x.get_text()[-4:] == '.tcz':
-                out += x.get_text() + "\n"
-        cachefile = open('/tmp/TCEFind-Index.cache', 'w')
-        cachefile.write(out)
-        cachefile.close()
-    else:
-        while True:
-            time.sleep(30*60)
-            cacheIndex(True)
-
 if __name__ == '__main__':
-    cacheIndex(True)
-    _thread.start_new_thread(cacheIndex, (True,))
     app.run()
