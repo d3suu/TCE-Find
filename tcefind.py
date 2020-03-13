@@ -13,28 +13,18 @@ def webform():
 @app.route('/search', methods=['GET'])
 def parse_search():
     searchword = request.args.get("searchword")
-    #page = requests.get("http://distro.ibiblio.org/tinycorelinux/11.x/x86/tcz/")
-    #if(page.status_code != 200):
-    #    return "ibiblio error!"
-    #soup = BeautifulSoup(page.content, 'html.parser')
     indexfile = open('/tmp/TCEFind-Index.cache', 'r')
     indexcache = indexfile.read()
     indexfile.close()
-    soup = BeautifulSoup(indexcache, 'html.parser')
-    links = soup.find_all('a')
-    links = links[4:] # Remove directory links
-    
-    # Make list of package names
-    names = []
-    for x in links:
-        if x.get_text()[-4:] == '.tcz':
-            names.append(x.get_text())
+    names = indexcache.splitlines()
 
     # Match in names
     matching = [s for s in names if searchword in s]
 
     # Build html
     htmlout = "<head><title> TCE-Find - " + searchword + "</title></head><body>"
+    if matching == []:
+        return htmlout + "<h1> No packages found! </h1></body>"
     for x in matching:
         htmlout += "<a href=\"/info?package=" + x + "\">" + x + "</a><br>\n"
     htmlout += "</body>"
@@ -49,16 +39,25 @@ def package_info():
     depret = ""
     if dep.status_code == 200:
         dep = dep.content.decode("utf-8").splitlines()
-        depret = "<h2> Dependency </h2><br>"
+        depret = "<h2> Dependency: </h2><br>"
         for x in dep:
             depret += "<a href=\"/info?package=" + x + "\">" + x + "</a><br>"
     return render_template("info.html", info=info, md5sum=md5sum, dep=depret, packagename=packagename)
 
 def cacheIndex(do_once):
     if do_once:
-        index = requests.get("http://distro.ibiblio.org/tinycorelinux/11.x/x86/tcz/").content.decode("utf-8")
+        index = requests.get("http://distro.ibiblio.org/tinycorelinux/11.x/x86/tcz/")
+        if(index.status_code != 200):
+            print("ibiblio error!")
+        soup = BeautifulSoup(index.content, 'html.parser')
+        links = soup.find_all('a')
+        links = links[4:] # Remove directory links
+        out = ""
+        for x in links:
+            if x.get_text()[-4:] == '.tcz':
+                out += x.get_text() + "\n"
         cachefile = open('/tmp/TCEFind-Index.cache', 'w')
-        cachefile.write(index)
+        cachefile.write(out)
         cachefile.close()
     else:
         while True:
