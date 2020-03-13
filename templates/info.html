@@ -1,0 +1,17 @@
+<head>
+	<title> TCE-Find - {{ packagename }}</title>
+<style>
+code {
+	display: block;
+	white-space: pre-wrap;
+}
+</style>
+</head>
+<body>
+	<h1> {{ packagename }} </h1><br>
+	<h2> Info: </h2><br>
+	<code>{{ info }}</code><br>
+	{{ dep|safe }}
+	<h2> MD5: </h2>
+	<code>{{ md5sum }}</code>
+</body>
