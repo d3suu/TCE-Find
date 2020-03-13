@@ -14,13 +14,13 @@ def webform():
 def parse_search():
     searchword = request.args.get("searchword")
     if searchword is None or searchword == '':
-        return "<head><title> TCE-Find </title></head><body><h1> No search word specified! </h1></body>"
+        return render_template('error.html', error="No search word specified!")
     try:
         indexfile = open('/tmp/TCEFind-Index.cache', 'r')
         indexcache = indexfile.read()
         indexfile.close()
     except:
-        return "<head><title> TCE-Find </title></head><body><h1> Index cache error! </h1></body>"
+        return render_template('error.html', error="Index cache error!")
     names = indexcache.splitlines()
 
     # Match in names
@@ -29,7 +29,7 @@ def parse_search():
     # Build html
     htmlout = "<head><title> TCE-Find - " + searchword + "</title></head><body>"
     if matching == []:
-        return htmlout + "<h1> No packages found! </h1></body>"
+        return render_template('error.html', error="No packages found!")
     for x in matching:
         htmlout += "<a href=\"/info?package=" + x + "\">" + x + "</a><br>\n"
     htmlout += "</body>"
@@ -39,10 +39,10 @@ def parse_search():
 def package_info():
     packagename = request.args.get("package")
     if packagename is None or packagename == '':
-        return "<head><title> TCE-Find </title></head><body><h1> No package specified! </h1></body>"
+        return render_template('error.html', error="No package specified!")
     md5sum = requests.get("http://distro.ibiblio.org/tinycorelinux/11.x/x86/tcz/" + packagename + ".md5.txt")
     if md5sum.status_code != 200:
-        return "<head><title> TCE-Find - " + packagename + "</title></head><body><h1> Package not found! </h1></body>"
+        return render_template('error.html', error="Package not found!")
     info = requests.get("http://distro.ibiblio.org/tinycorelinux/11.x/x86/tcz/" + packagename + ".info").content.decode("utf-8")
     dep = requests.get("http://distro.ibiblio.org/tinycorelinux/11.x/x86/tcz/" + packagename + ".dep")
     depret = ""
